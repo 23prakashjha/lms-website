@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Users, DollarSign, TrendingUp, Plus, HelpCircle, Edit, Trash2, Eye, FileText, Settings, ChevronDown, ChevronUp, BookMarked, ArrowRight, FileCheck, ClipboardList, ChevronRight } from 'lucide-react'
+import { BookOpen, Users, DollarSign, TrendingUp, Plus, HelpCircle, Edit, Trash2, Eye, FileText, Settings, ChevronDown, ChevronUp, BookMarked, ArrowRight, FileCheck, ClipboardList, ChevronRight, X, Briefcase, GraduationCap, Globe, Award, Calendar, Upload, Building2 } from 'lucide-react'
 import axios from 'axios'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { formatPrice } from '../../utils/priceFormatter'
 import toast from 'react-hot-toast'
+import AuthContext from '../../context/AuthContext'
 
 const InstructorDashboard = () => {
+  const { user, updateUser } = useContext(AuthContext)
   const [stats, setStats] = useState({
     totalCourses: 0,
     totalStudents: 0,
@@ -20,10 +22,100 @@ const InstructorDashboard = () => {
   const [courseQuizzes, setCourseQuizzes] = useState({})
   const [courseAssignments, setCourseAssignments] = useState({})
   const [showCreateDropdown, setShowCreateDropdown] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef(null)
+  const [profileForm, setProfileForm] = useState({
+    name: '', bio: '', avatar: '', skills: '',
+    highestQualification: '', subjects: '', languages: '', currentCompany: '', totalExperience: 0,
+    experience: []
+  })
 
   useEffect(() => {
     fetchDashboardData()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || '',
+        bio: user.bio || '',
+        avatar: user.avatar || '',
+        skills: user.skills?.join(', ') || '',
+        highestQualification: user.highestQualification || '',
+        subjects: user.subjects?.join(', ') || '',
+        languages: user.languages?.join(', ') || '',
+        currentCompany: user.currentCompany || '',
+        totalExperience: user.totalExperience || 0,
+        experience: user.experience || []
+      })
+    }
+  }, [user])
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAvatar(true)
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      const { data } = await axios.post('/api/upload/avatar', formData)
+      setProfileForm(prev => ({ ...prev, avatar: data.url }))
+      toast.success('Avatar uploaded')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to upload avatar')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  const addExperience = () => {
+    setProfileForm(prev => ({
+      ...prev,
+      experience: [...prev.experience, { company: '', position: '', startDate: '', endDate: '', description: '', current: false }]
+    }))
+  }
+
+  const removeExperience = (index) => {
+    setProfileForm(prev => ({
+      ...prev,
+      experience: prev.experience.filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateExperience = (index, field, value) => {
+    setProfileForm(prev => {
+      const updated = [...prev.experience]
+      updated[index] = { ...updated[index], [field]: value }
+      if (field === 'current' && value === true) {
+        updated[index].endDate = ''
+      }
+      return { ...prev, experience: updated }
+    })
+  }
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault()
+    try {
+      const { data } = await axios.put('/api/users/profile', {
+        name: profileForm.name,
+        bio: profileForm.bio,
+        avatar: profileForm.avatar,
+        skills: profileForm.skills.split(',').map(s => s.trim()).filter(Boolean),
+        highestQualification: profileForm.highestQualification,
+        subjects: profileForm.subjects.split(',').map(s => s.trim()).filter(Boolean),
+        languages: profileForm.languages.split(',').map(s => s.trim()).filter(Boolean),
+        currentCompany: profileForm.currentCompany,
+        totalExperience: Number(profileForm.totalExperience),
+        experience: profileForm.experience
+      })
+      updateUser(data.user)
+      toast.success('Profile updated successfully')
+      setShowProfileModal(false)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update profile')
+    }
+  }
 
   const fetchDashboardData = async () => {
     try {
@@ -205,6 +297,67 @@ const InstructorDashboard = () => {
                 </>
               )}
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-5">
+              <img
+                src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'Instructor'}&background=3b82f6&color=fff`}
+                alt="Profile"
+                className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
+              />
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{user?.name || 'Instructor'}</h2>
+                <p className="text-gray-500 text-sm">{user?.email}</p>
+                {user?.bio && <p className="text-gray-600 mt-2 max-w-lg text-sm">{user.bio}</p>}
+                <div className="flex flex-wrap gap-3 mt-3 text-sm text-gray-600">
+                  {user?.highestQualification && (
+                    <span className="flex items-center"><GraduationCap className="h-4 w-4 mr-1 text-primary-600" />{user.highestQualification}</span>
+                  )}
+                  {user?.currentCompany && (
+                    <span className="flex items-center"><Briefcase className="h-4 w-4 mr-1 text-primary-600" />{user.currentCompany}</span>
+                  )}
+                  {user?.totalExperience > 0 && (
+                    <span className="flex items-center"><Calendar className="h-4 w-4 mr-1 text-primary-600" />{user.totalExperience} years exp.</span>
+                  )}
+                </div>
+                {user?.subjects?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {user.subjects.map((s, i) => <span key={i} className="px-2 py-1 bg-primary-50 text-primary-600 text-xs rounded-full">{s}</span>)}
+                  </div>
+                )}
+                {user?.languages?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {user.languages.map((l, i) => <span key={i} className="flex items-center px-2 py-1 bg-green-50 text-green-600 text-xs rounded-full"><Globe className="h-3 w-3 mr-1" />{l}</span>)}
+                  </div>
+                )}
+                {user?.experience?.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-semibold text-gray-700 flex items-center mb-2"><Briefcase className="h-4 w-4 mr-1 text-primary-600" />Experience</h4>
+                    <div className="space-y-3">
+                      {user.experience.map((exp, i) => (
+                        <div key={i} className="border-l-2 border-primary-200 pl-3">
+                          <p className="text-sm font-medium text-gray-900">{exp.position}</p>
+                          <p className="text-xs text-gray-600">{exp.company}</p>
+                          <p className="text-xs text-gray-400">
+                            {exp.startDate && new Date(exp.startDate + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+                            {' - '}
+                            {exp.current ? 'Present' : exp.endDate ? new Date(exp.endDate + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : ''}
+                          </p>
+                          {exp.description && <p className="text-xs text-gray-500 mt-1">{exp.description}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <button onClick={() => setShowProfileModal(true)} className="flex items-center space-x-1 text-primary-600 hover:text-primary-700 font-medium text-sm px-4 py-2 border border-primary-200 rounded-lg hover:bg-primary-50">
+              <Edit className="h-4 w-4" />
+              <span>Edit Profile</span>
+            </button>
           </div>
         </div>
 
@@ -497,6 +650,132 @@ const InstructorDashboard = () => {
           )}
         </div>
       </div>
+
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Profile</h3>
+              <button onClick={() => setShowProfileModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleProfileUpdate} className="p-6 space-y-4">
+              <div className="flex flex-col items-center mb-4">
+                <div className="relative">
+                  <img
+                    src={profileForm.avatar || `https://ui-avatars.com/api/?name=${profileForm.name || 'Instructor'}&background=3b82f6&color=fff`}
+                    alt=""
+                    className="h-24 w-24 rounded-full object-cover border-2 border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="absolute -bottom-2 -right-2 bg-primary-600 text-white p-1.5 rounded-full hover:bg-primary-700 disabled:opacity-50"
+                  >
+                    {uploadingAvatar ? (
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Click camera icon to upload photo</p>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Your name" className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                <textarea value={profileForm.bio} onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })} placeholder="Tell us about yourself" className="input-field" rows="3" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Highest Qualification</label>
+                <input type="text" value={profileForm.highestQualification} onChange={(e) => setProfileForm({ ...profileForm, highestQualification: e.target.value })} placeholder="e.g. Master's in Computer Science" className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Current Company</label>
+                <input type="text" value={profileForm.currentCompany} onChange={(e) => setProfileForm({ ...profileForm, currentCompany: e.target.value })} placeholder="e.g. Google, Microsoft" className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Total Experience (years)</label>
+                <input type="number" value={profileForm.totalExperience} onChange={(e) => setProfileForm({ ...profileForm, totalExperience: e.target.value })} placeholder="e.g. 5" className="input-field" min="0" />
+              </div>
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-semibold text-gray-700">Experience</label>
+                  <button type="button" onClick={addExperience} className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                    <Plus className="h-4 w-4 mr-1" /> Add Experience
+                  </button>
+                </div>
+                {profileForm.experience.map((exp, i) => (
+                  <div key={i} className="bg-gray-50 rounded-lg p-4 mb-3 space-y-3 border border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Entry {i + 1}</span>
+                      <button type="button" onClick={() => removeExperience(i)} className="text-red-500 hover:text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Company</label>
+                        <input type="text" value={exp.company} onChange={(e) => updateExperience(i, 'company', e.target.value)} placeholder="Company name" className="input-field text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Position</label>
+                        <input type="text" value={exp.position} onChange={(e) => updateExperience(i, 'position', e.target.value)} placeholder="Job title" className="input-field text-sm" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                        <input type="month" value={exp.startDate} onChange={(e) => updateExperience(i, 'startDate', e.target.value)} className="input-field text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+                        <input type="month" value={exp.endDate} onChange={(e) => updateExperience(i, 'endDate', e.target.value)} className="input-field text-sm" disabled={exp.current} />
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <input type="checkbox" id={`current-${i}`} checked={exp.current} onChange={(e) => updateExperience(i, 'current', e.target.checked)} className="h-4 w-4 text-primary-600 rounded border-gray-300" />
+                      <label htmlFor={`current-${i}`} className="ml-2 text-sm text-gray-600">I currently work here</label>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                      <textarea value={exp.description} onChange={(e) => updateExperience(i, 'description', e.target.value)} placeholder="Describe your role and achievements" className="input-field text-sm" rows="2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subjects / Topics you teach (comma separated)</label>
+                <input type="text" value={profileForm.subjects} onChange={(e) => setProfileForm({ ...profileForm, subjects: e.target.value })} placeholder="e.g. JavaScript, React, Node.js" className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Languages you speak (comma separated)</label>
+                <input type="text" value={profileForm.languages} onChange={(e) => setProfileForm({ ...profileForm, languages: e.target.value })} placeholder="e.g. English, Hindi, Spanish" className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Skills (comma separated)</label>
+                <input type="text" value={profileForm.skills} onChange={(e) => setProfileForm({ ...profileForm, skills: e.target.value })} placeholder="e.g. Teaching, Communication, Leadership" className="input-field" />
+              </div>
+              <div className="flex space-x-3 pt-2">
+                <button type="button" onClick={() => setShowProfileModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+                <button type="submit" className="flex-1 btn-primary">Save Profile</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

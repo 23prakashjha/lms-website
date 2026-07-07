@@ -7,7 +7,8 @@ export const createCourse = async (req, res) => {
   try {
     const course = await Course.create({
       ...req.body,
-      instructor: req.user.id
+      instructor: req.user.id,
+      isPublished: true
     })
     
     await User.findByIdAndUpdate(req.user.id, {
@@ -24,7 +25,7 @@ export const getCourses = async (req, res) => {
   try {
     const { search, category, level, price, sort, page = 1, limit = 12 } = req.query
     
-    const query = { isPublished: true }
+    const query = {}
     
     if (search) {
       query.$text = { $search: search }
@@ -88,11 +89,11 @@ export const getCourse = async (req, res) => {
 
 export const updateCourse = async (req, res) => {
   try {
-    const course = await Course.findOneAndUpdate(
-      { _id: req.params.id, instructor: req.user.id },
-      req.body,
-      { new: true, runValidators: true }
-    )
+    const filter = req.user.role === 'admin'
+      ? { _id: req.params.id }
+      : { _id: req.params.id, instructor: req.user.id }
+
+    const course = await Course.findOneAndUpdate(filter, req.body, { new: true, runValidators: true })
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' })
@@ -106,7 +107,11 @@ export const updateCourse = async (req, res) => {
 
 export const deleteCourse = async (req, res) => {
   try {
-    const course = await Course.findOneAndDelete({ _id: req.params.id, instructor: req.user.id })
+    const filter = req.user.role === 'admin'
+      ? { _id: req.params.id }
+      : { _id: req.params.id, instructor: req.user.id }
+
+    const course = await Course.findOneAndDelete(filter)
     
     if (!course) {
       return res.status(404).json({ message: 'Course not found' })

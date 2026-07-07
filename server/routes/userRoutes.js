@@ -8,8 +8,8 @@ router.get('/me', protect, getMe)
 router.put('/profile', protect, updateProfile)
 router.put('/password', protect, changePassword)
 router.get('/', protect, getAllUsers)
-router.get('/instructors', protect, getInstructors)
-router.put('/:id', protect, updateUser)
+router.get('/instructors', getInstructors)
+router.put('/:id', protect, adminOnly, updateUser)
 router.delete('/:id', protect, adminOnly, deleteUser)
 
 export default router

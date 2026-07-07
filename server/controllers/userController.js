@@ -11,10 +11,10 @@ export const getMe = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, bio, skills, avatar } = req.body
+    const { name, bio, skills, avatar, highestQualification, subjects, languages, currentCompany, totalExperience, experience } = req.body
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { name, bio, skills, avatar },
+      { name, bio, skills, avatar, highestQualification, subjects, languages, currentCompany, totalExperience, experience },
       { new: true, runValidators: true }
     )
     res.json({ success: true, user })

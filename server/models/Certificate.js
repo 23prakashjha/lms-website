@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 
 const certificateSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
-  enrollment: { type: mongoose.Schema.Types.ObjectId, ref: 'Enrollment', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+  enrollment: { type: mongoose.Schema.Types.ObjectId, ref: 'Enrollment' },
   certificateId: { type: String, unique: true },
   studentName: { type: String, required: true },
   courseName: { type: String, required: true },

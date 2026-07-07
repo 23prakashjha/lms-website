@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, User, BookOpen } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, BookOpen, GraduationCap, School, Shield } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AuthContext from '../context/AuthContext'
 
@@ -23,6 +23,10 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
+  const handleRoleChange = (newRole) => {
+    setFormData({ ...formData, role: newRole })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -43,9 +47,15 @@ const Register = () => {
 
     setLoading(true)
     try {
-      await register({ name, email, password, role })
+      const data = await register({ name, email, password, role })
       toast.success('Registration successful!')
-      navigate('/dashboard')
+      if (data.user.role === 'instructor') {
+        navigate('/instructor/dashboard')
+      } else if (data.user.role === 'admin') {
+        navigate('/admin/dashboard')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed')
     } finally {
@@ -66,6 +76,45 @@ const Register = () => {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => handleRoleChange('student')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 rounded-md text-sm font-medium transition-all ${
+                role === 'student'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <GraduationCap className="h-4 w-4" />
+              <span>Student</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRoleChange('instructor')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 rounded-md text-sm font-medium transition-all ${
+                role === 'instructor'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <School className="h-4 w-4" />
+              <span>Instructor</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRoleChange('admin')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 rounded-md text-sm font-medium transition-all ${
+                role === 'admin'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Shield className="h-4 w-4" />
+              <span>Admin</span>
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -95,19 +144,6 @@ const Register = () => {
                   className="input-field pl-10"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">I want to</label>
-              <select
-                name="role"
-                value={role}
-                onChange={handleChange}
-                className="input-field"
-              >
-                <option value="student">Learn new skills</option>
-                <option value="instructor">Teach students</option>
-              </select>
             </div>
 
             <div>

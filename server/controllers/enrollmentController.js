@@ -114,6 +114,18 @@ export const checkEnrollment = async (req, res) => {
   }
 }
 
+export const getAllEnrollments = async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find()
+      .populate('user', 'name email')
+      .populate('course', 'title')
+      .sort({ enrolledAt: -1 })
+    res.json({ success: true, enrollments })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
 export const markLessonComplete = async (req, res) => {
   try {
     const { lessonId } = req.body
@@ -137,14 +149,14 @@ export const markLessonComplete = async (req, res) => {
       if (enrollment.progress >= 100) {
         enrollment.isCompleted = true
         
-        const course = await Course.findById(courseId)
+        const course = await Course.findById(courseId).populate('instructor', 'name')
         const certificate = await Certificate.create({
           user: req.user.id,
           course: courseId,
           enrollment: enrollment._id,
           studentName: req.user.name,
           courseName: course.title,
-          instructorName: course.instructor.name,
+          instructorName: course.instructor?.name || 'Instructor',
           completionDate: new Date()
         })
 

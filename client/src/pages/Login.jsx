@@ -24,9 +24,16 @@ const Login = () => {
 
     setLoading(true)
     try {
-      await login(email, password)
+      const data = await login(email, password)
+      const userRole = data.user.role
+      if (userRole === 'admin') {
+        navigate('/admin/dashboard', { replace: true })
+      } else if (userRole === 'instructor') {
+        navigate('/instructor/dashboard', { replace: true })
+      } else {
+        navigate(from, { replace: true })
+      }
       toast.success('Login successful!')
-      navigate(from, { replace: true })
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed')
     } finally {

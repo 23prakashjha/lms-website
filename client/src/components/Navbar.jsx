@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, User, LogOut, BookOpen, Settings, LayoutDashboard, Shield, Info, Phone, Award, FileText, HelpCircle, MessageCircle, Bell, ChevronDown } from 'lucide-react'
+import { Menu, X, User, LogOut, BookOpen, Settings, LayoutDashboard, Shield, Info, Phone, Award, FileText, HelpCircle, MessageCircle, Bell, ChevronDown, GraduationCap } from 'lucide-react'
 import AuthContext from '../context/AuthContext'
 
 const Navbar = () => {
@@ -30,6 +30,9 @@ const Navbar = () => {
             <Link to="/courses" className="text-gray-600 hover:text-primary-600 transition-colors font-medium">
               Courses
             </Link>
+            <Link to="/instructor" className="text-gray-600 hover:text-primary-600 transition-colors font-medium">
+              Instructors
+            </Link>
             <Link to="/about" className="text-gray-600 hover:text-primary-600 transition-colors font-medium">
               About
             </Link>
@@ -51,12 +54,6 @@ const Navbar = () => {
 
             {user ? (
               <>
-                <Link to="/dashboard" className="text-gray-600 hover:text-primary-600 transition-colors font-medium">
-                  Dashboard
-                </Link>
-                <Link to="/notifications" className="text-gray-600 hover:text-primary-600 transition-colors">
-                  <Bell className="h-6 w-6" />
-                </Link>
                 <div className="relative">
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -67,6 +64,7 @@ const Navbar = () => {
                     ) : (
                       <User className="h-6 w-6" />
                     )}
+                    <span className="hidden lg:inline text-sm font-medium">{user.name}</span>
                     <ChevronDown className={`h-4 w-4 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {userDropdownOpen && (
@@ -79,13 +77,23 @@ const Navbar = () => {
                         </span>
                       </div>
                       <Link
-                        to="/profile"
+                        to={user.role === 'instructor' ? '/instructor/dashboard' : user.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
                         className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserDropdownOpen(false)}
                       >
-                        <User className="h-4 w-4 mr-3" />
-                        My Profile
+                        <LayoutDashboard className="h-4 w-4 mr-3" />
+                        Dashboard
                       </Link>
+                      {user.role !== 'admin' && (
+                        <Link
+                          to="/profile"
+                          className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+                          onClick={() => setUserDropdownOpen(false)}
+                        >
+                          <User className="h-4 w-4 mr-3" />
+                          My Profile
+                        </Link>
+                      )}
                       <Link
                         to="/notifications"
                         className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
@@ -106,33 +114,12 @@ const Navbar = () => {
                         <>
                           <div className="border-t my-2"></div>
                           <Link
-                            to="/instructor/dashboard"
-                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-                            onClick={() => setUserDropdownOpen(false)}
-                          >
-                            <LayoutDashboard className="h-4 w-4 mr-3" />
-                            Instructor Dashboard
-                          </Link>
-                          <Link
                             to="/instructor/create-course"
                             className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
                             onClick={() => setUserDropdownOpen(false)}
                           >
                             <BookOpen className="h-4 w-4 mr-3" />
                             Create Course
-                          </Link>
-                        </>
-                      )}
-                      {user.role === 'admin' && (
-                        <>
-                          <div className="border-t my-2"></div>
-                          <Link
-                            to="/admin/dashboard"
-                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-                            onClick={() => setUserDropdownOpen(false)}
-                          >
-                            <Shield className="h-4 w-4 mr-3" />
-                            Admin Panel
                           </Link>
                         </>
                       )}
@@ -150,9 +137,6 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/login" className="text-gray-600 hover:text-primary-600 transition-colors font-medium">
-                  Login
-                </Link>
                 <Link to="/register" className="btn-primary">
                   Get Started
                 </Link>
@@ -173,6 +157,9 @@ const Navbar = () => {
           <div className="px-4 py-4 space-y-3">
             <Link to="/courses" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
               Courses
+            </Link>
+            <Link to="/instructor" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
+              Instructors
             </Link>
             <Link to="/about" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
               About
@@ -195,23 +182,25 @@ const Navbar = () => {
             {user ? (
               <>
                 <div className="border-t pt-3 mt-3">
-                  <Link to="/dashboard" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
+                  <Link
+                    to={user.role === 'instructor' ? '/instructor/dashboard' : user.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
+                    className="flex items-center text-gray-600 hover:text-primary-600 font-medium py-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <LayoutDashboard className="h-5 w-5 mr-2" />
                     Dashboard
                   </Link>
-                  <Link to="/profile" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
-                    Profile
-                  </Link>
+                  {user.role !== 'admin' && (
+                    <Link to="/profile" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
+                      Profile
+                    </Link>
+                  )}
                   <Link to="/notifications" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
                     Notifications
                   </Link>
-                  {user.role === 'instructor' && (
-                    <Link to="/instructor/dashboard" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
-                      Instructor Dashboard
-                    </Link>
-                  )}
-                  {user.role === 'admin' && (
-                    <Link to="/admin/dashboard" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
-                      Admin Panel
+                  {(user.role === 'instructor' || user.role === 'admin') && (
+                    <Link to="/instructor/create-course" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
+                      Create Course
                     </Link>
                   )}
                   <button onClick={handleLogout} className="block text-red-600 hover:text-red-700 font-medium py-2">
@@ -221,9 +210,6 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/login" className="block text-gray-600 hover:text-primary-600 font-medium py-2" onClick={() => setIsOpen(false)}>
-                  Login
-                </Link>
                 <Link to="/register" className="btn-primary text-center block mt-2" onClick={() => setIsOpen(false)}>
                   Get Started
                 </Link>

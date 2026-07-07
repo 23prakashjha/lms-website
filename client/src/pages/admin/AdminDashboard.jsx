@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Users, BookOpen, DollarSign, TrendingUp, Shield, Edit, Trash2 } from 'lucide-react'
+import { Users, BookOpen, DollarSign, TrendingUp, Shield, Edit, Trash2, Plus, X, GraduationCap, School, Search, Award, CheckCircle, ExternalLink } from 'lucide-react'
 import axios from 'axios'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { formatPrice } from '../../utils/priceFormatter'
+import toast from 'react-hot-toast'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -15,6 +16,23 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([])
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
+  const [userFilter, setUserFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'student'
+  })
+  const [showCourseModal, setShowCourseModal] = useState(false)
+  const [editingCourse, setEditingCourse] = useState(null)
+  const [courseForm, setCourseForm] = useState({ title: '', description: '', price: '', category: '', level: '' })
+  const [certificates, setCertificates] = useState([])
+  const [certForm, setCertForm] = useState({ studentName: '', courseName: '', instructorName: '' })
 
   useEffect(() => {
     fetchData()
@@ -40,10 +58,78 @@ const AdminDashboard = () => {
         totalRevenue: paymentsRes.data.totalRevenue || 0,
         activeUsers: students + instructors
       })
+
+      try {
+        const certRes = await axios.get('/api/certificates')
+        setCertificates(certRes.data.certificates || [])
+      } catch (e) { /* cert routes may not exist */ }
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleEditCourse = (course) => {
+    setEditingCourse(course)
+    setCourseForm({
+      title: course.title || '',
+      description: course.description || '',
+      price: course.price || '',
+      category: course.category || '',
+      level: course.level || ''
+    })
+    setShowCourseModal(true)
+  }
+
+  const handleUpdateCourse = async (e) => {
+    e.preventDefault()
+    if (!editingCourse) return
+    try {
+      await axios.put(`/api/courses/${editingCourse._id}`, {
+        title: courseForm.title,
+        description: courseForm.description,
+        price: parseFloat(courseForm.price) || 0,
+        category: courseForm.category,
+        level: courseForm.level
+      })
+      toast.success('Course updated successfully')
+      setShowCourseModal(false)
+      setEditingCourse(null)
+      fetchData()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update course')
+    }
+  }
+
+  const handleDeleteCourse = async (courseId, courseTitle) => {
+    if (!window.confirm(`Delete "${courseTitle}"? This cannot be undone.`)) return
+    try {
+      await axios.delete(`/api/courses/${courseId}`)
+      toast.success('Course deleted')
+      fetchData()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete course')
+    }
+  }
+
+  const handleCreateCertificate = async (e) => {
+    e.preventDefault()
+    if (!certForm.studentName || !certForm.courseName) {
+      toast.error('Student name and course name are required')
+      return
+    }
+    try {
+      await axios.post('/api/certificates', {
+        studentName: certForm.studentName,
+        courseName: certForm.courseName,
+        instructorName: certForm.instructorName || 'Instructor'
+      })
+      toast.success('Certificate created successfully')
+      setCertForm({ studentName: '', courseName: '', instructorName: '' })
+      fetchData()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create certificate')
     }
   }
 
@@ -56,6 +142,62 @@ const AdminDashboard = () => {
     { name: 'Sat', users: 85 },
     { name: 'Sun', users: 78 }
   ]
+
+  const handleAddUser = async (e) => {
+    e.preventDefault()
+    if (!formData.name || !formData.email || !formData.password) {
+      toast.error('Please fill in all fields')
+      return
+    }
+    try {
+      await axios.post('/api/auth/admin/register', formData)
+      toast.success('User created successfully')
+      setShowAddModal(false)
+      setFormData({ name: '', email: '', password: '', role: 'student' })
+      fetchData()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create user')
+    }
+  }
+
+  const handleEditUser = async (e) => {
+    e.preventDefault()
+    if (!editingUser) return
+    try {
+      await axios.put(`/api/users/${editingUser._id}`, {
+        name: editingUser.name,
+        email: editingUser.email,
+        role: editingUser.role
+      })
+      toast.success('User updated successfully')
+      setShowEditModal(false)
+      setEditingUser(null)
+      fetchData()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update user')
+    }
+  }
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+      return
+    }
+    try {
+      await axios.delete(`/api/users/${userId}`)
+      toast.success('User deleted successfully')
+      fetchData()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete user')
+    }
+  }
+
+  const filteredUsers = users.filter(u => {
+    const matchesRole = userFilter === 'all' || u.role === userFilter
+    const matchesSearch = !searchTerm || 
+      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesRole && matchesSearch
+  })
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>
@@ -161,9 +303,56 @@ const AdminDashboard = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Manage Users</h2>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setUserFilter('all')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  userFilter === 'all' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                All Users
+              </button>
+              <button
+                onClick={() => setUserFilter('instructor')}
+                className={`flex items-center space-x-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  userFilter === 'instructor' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <School className="h-4 w-4" />
+                <span>Instructors</span>
+              </button>
+              <button
+                onClick={() => setUserFilter('student')}
+                className={`flex items-center space-x-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  userFilter === 'student' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <GraduationCap className="h-4 w-4" />
+                <span>Students</span>
+              </button>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search users..."
+                  className="input-field pl-9 py-2 text-sm"
+                />
+              </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add User</span>
+              </button>
+            </div>
           </div>
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -176,7 +365,7 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <tr key={user._id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div className="flex items-center">
@@ -207,21 +396,326 @@ const AdminDashboard = () => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-800">
+                        <button
+                          onClick={() => {
+                            setEditingUser(user)
+                            setShowEditModal(true)
+                          }}
+                          className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"
+                        >
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button className="text-red-600 hover:text-red-800">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {user.role !== 'admin' && (
+                          <button
+                            onClick={() => handleDeleteUser(user._id, user.name)}
+                            className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {filteredUsers.length === 0 && (
+              <p className="text-center text-gray-500 py-8">No users found</p>
+            )}
           </div>
         </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center"><BookOpen className="h-5 w-5 mr-2 text-primary-600" />Manage Courses</h2>
+          </div>
+          {courses.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No courses found</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Course</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Category</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Price</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Students</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {courses.map((course) => (
+                    <tr key={course._id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center">
+                          <img src={course.thumbnail || 'https://via.placeholder.com/40'} alt="" className="h-10 w-10 rounded-lg object-cover mr-3" />
+                          <div>
+                            <p className="font-medium text-gray-900 text-sm">{course.title}</p>
+                            <p className="text-xs text-gray-500">{course.instructor?.name}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{course.category || '-'}</td>
+                      <td className="py-3 px-4 text-sm">{course.price === 0 ? <span className="text-green-600 font-medium">Free</span> : formatPrice(course.price)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{course.totalStudents || 0}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex space-x-2">
+                          <button onClick={() => handleEditCourse(course)} className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"><Edit className="h-4 w-4" /></button>
+                          <button onClick={() => handleDeleteCourse(course._id, course.title)} className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+                          <Link to={`/courses/${course.slug}`} className="text-gray-600 hover:text-gray-800 p-1 rounded hover:bg-gray-50"><ExternalLink className="h-4 w-4" /></Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center"><Award className="h-5 w-5 mr-2 text-yellow-600" />Certificates</h2>
+          </div>
+
+          <form onSubmit={handleCreateCertificate} className="flex flex-wrap gap-3 items-end mb-6 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Student Name</label>
+              <input type="text" value={certForm.studentName} onChange={(e) => setCertForm({ ...certForm, studentName: e.target.value })} placeholder="e.g. John Doe" className="input-field text-sm py-2" required />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Course Name</label>
+              <input type="text" value={certForm.courseName} onChange={(e) => setCertForm({ ...certForm, courseName: e.target.value })} placeholder="e.g. Web Development" className="input-field text-sm py-2" required />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Instructor</label>
+              <input type="text" value={certForm.instructorName} onChange={(e) => setCertForm({ ...certForm, instructorName: e.target.value })} placeholder="Optional" className="input-field text-sm py-2" />
+            </div>
+            <button type="submit" className="btn-primary text-sm py-2"><Plus className="h-4 w-4 mr-1 inline" />Create Certificate</button>
+          </form>
+
+          {certificates.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No certificates issued yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Student</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Course</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Issue Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Certificate ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {certificates.map((cert) => (
+                    <tr key={cert._id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center">
+                          <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center mr-3"><Award className="h-4 w-4 text-yellow-600" /></div>
+                          <span className="text-sm font-medium text-gray-900">{cert.studentName}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{cert.courseName}</td>
+                      <td className="py-3 px-4 text-sm text-gray-500">{new Date(cert.issueDate).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-xs text-gray-400 font-mono">{cert.certificateId}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
+
+      {showCourseModal && editingCourse && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Course</h3>
+              <button onClick={() => { setShowCourseModal(false); setEditingCourse(null) }} className="text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button>
+            </div>
+            <form onSubmit={handleUpdateCourse} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input type="text" value={courseForm.title} onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })} className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea value={courseForm.description} onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })} className="input-field" rows="3" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                  <input type="number" value={courseForm.price} onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })} className="input-field" min="0" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <input type="text" value={courseForm.category} onChange={(e) => setCourseForm({ ...courseForm, category: e.target.value })} className="input-field" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
+                <select value={courseForm.level} onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })} className="input-field">
+                  <option value="">Select level</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
+              <div className="flex space-x-3 pt-2">
+                <button type="button" onClick={() => { setShowCourseModal(false); setEditingCourse(null) }} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+                <button type="submit" className="flex-1 btn-primary">Update Course</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Add New User</h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAddUser} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter name"
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Enter email"
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Enter password"
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="input-field"
+                >
+                  <option value="student">Student</option>
+                  <option value="instructor">Instructor</option>
+                </select>
+              </div>
+              <div className="flex space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 btn-primary"
+                >
+                  Add User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditingUser(null)
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleEditUser} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  placeholder="Enter name"
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  placeholder="Enter email"
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select
+                  value={editingUser.role}
+                  onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
+                  className="input-field"
+                >
+                  <option value="student">Student</option>
+                  <option value="instructor">Instructor</option>
+                  {editingUser.role === 'admin' && <option value="admin">Admin</option>}
+                </select>
+              </div>
+              <div className="flex space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditingUser(null)
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 btn-primary"
+                >
+                  Update User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

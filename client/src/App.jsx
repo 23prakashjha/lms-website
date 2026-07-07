@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -22,10 +22,12 @@ import CoursePlayer from './pages/CoursePlayer'
 import Assignments from './pages/Assignments'
 import Quizzes from './pages/Quizzes'
 import Certificates from './pages/Certificates'
+import CertificateDetail from './pages/CertificateDetail'
 import Chat from './pages/Chat'
 import Notifications from './pages/Notifications'
 import About from './pages/About'
 import Contact from './pages/Contact'
+import Instructor from './pages/Instructor'
 import TakeQuiz from './pages/TakeQuiz'
 
 function App() {
@@ -39,6 +41,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/instructor" element={<Instructor />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/courses" element={<Courses />} />
@@ -46,7 +49,7 @@ function App() {
             <Route path="/course/:courseId/lesson/:lessonId" element={<CoursePlayer />} />
             
             <Route path="/dashboard" element={
-              <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+              <ProtectedRoute allowedRoles={['student']}>
                 <Dashboard />
               </ProtectedRoute>
             } />
@@ -66,8 +69,13 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/certificates" element={
-              <ProtectedRoute allowedRoles={['student']}>
+              <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
                 <Certificates />
+              </ProtectedRoute>
+            } />
+            <Route path="/certificate/:id" element={
+              <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+                <CertificateDetail />
               </ProtectedRoute>
             } />
             <Route path="/chat" element={
