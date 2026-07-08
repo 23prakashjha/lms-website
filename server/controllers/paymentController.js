@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import Payment from '../models/Payment.js'
 import Enrollment from '../models/Enrollment.js'
 import Course from '../models/Course.js'
@@ -72,16 +73,12 @@ export const verifyPayment = async (req, res) => {
       return res.status(404).json({ message: 'Payment not found' })
     }
 
-    const Razorpay = (await import('razorpay')).default
-    const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET
-    })
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex')
 
-    const isValid = razorpay.validatePaymentVerification(
-      { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
-      razorpay_signature
-    )
+    const isValid = expectedSignature === razorpay_signature
 
     if (!isValid) {
       payment.status = 'failed'
