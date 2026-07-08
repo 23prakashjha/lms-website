@@ -88,6 +88,7 @@ const CourseDetail = () => {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'theory', label: 'Theory', icon: Sparkles },
     { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
     { id: 'reviews', label: 'Reviews', icon: MessageSquare },
     { id: 'instructor', label: 'Instructor', icon: GraduationCap },
@@ -332,16 +333,16 @@ const CourseDetail = () => {
                     <CheckCircle className="h-5 w-5 text-primary-600" />
                     What you'll learn
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <ul className="space-y-3">
                     {(course.whatYouWillLearn?.length ? course.whatYouWillLearn : ['Comprehensive course content']).map((item, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-xl hover:bg-primary-50 transition-colors">
-                        <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <CheckCircle className="h-3.5 w-3.5 text-green-600" />
-                        </div>
-                        <span className="text-gray-700 text-sm leading-relaxed">{item}</span>
-                      </div>
+                      <li key={index} className="flex items-start gap-3 text-gray-700 text-sm">
+                        <span className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                        </span>
+                        {item}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
 
                 {/* Curriculum / Course Modules */}
@@ -513,6 +514,41 @@ const CourseDetail = () => {
             </div>
           )}
 
+          {activeTab === 'theory' && (
+            <div className="max-w-4xl">
+              <div className="card p-6 lg:p-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary-600" />
+                  What You'll Learn - Theory
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    'Write efficient Python code for data analysis.',
+                    'Clean, transform, and analyze real-world datasets.',
+                    'Perform exploratory data analysis (EDA).',
+                    'Build interactive dashboards and visualizations.',
+                    'Apply statistical methods to solve business problems.',
+                    'Develop machine learning models for prediction and classification.',
+                    'Build deep learning models using TensorFlow and Keras.',
+                    'Process text using Natural Language Processing techniques.',
+                    'Develop computer vision applications with OpenCV.',
+                    'Create AI-powered solutions using modern Generative AI concepts.',
+                    'Deploy machine learning models using Flask, FastAPI, Docker, and cloud platforms.',
+                    'Build an industry-ready portfolio with 50+ projects.',
+                    'Prepare confidently for Data Science interviews at startups, product-based companies, and multinational organizations.',
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 rounded-xl hover:bg-primary-50 transition-colors">
+                      <div className="h-6 w-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <CheckCircle className="h-3.5 w-3.5 text-primary-600" />
+                      </div>
+                      <span className="text-gray-700 text-sm leading-relaxed">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'curriculum' && (
             <div className="max-w-4xl">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
@@ -524,6 +560,22 @@ const CourseDetail = () => {
                   {lessons.filter(l => l.isPreview).length} preview available
                 </span>
               </div>
+
+              {course.curriculum?.length > 0 && (
+                <div className="card p-6 lg:p-8 mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Modules</h3>
+                  <ul className="space-y-2">
+                    {course.curriculum.map((module, index) => (
+                      <li key={index} className="flex items-start gap-3 text-gray-700 text-sm">
+                        <span className="h-6 w-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-semibold text-primary-600">
+                          {index + 1}
+                        </span>
+                        {module}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="space-y-2">
                 {lessons.length > 0 ? (
@@ -591,10 +643,12 @@ const CourseDetail = () => {
                     )
                   })
                 ) : (
-                  <div className="card p-12 text-center">
-                    <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Curriculum content is being added.</p>
-                  </div>
+                  !course.curriculum?.length && (
+                    <div className="card p-12 text-center">
+                      <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">Curriculum content is being added.</p>
+                    </div>
+                  )
                 )}
               </div>
             </div>

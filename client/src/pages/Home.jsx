@@ -421,7 +421,15 @@ const Home = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="absolute bottom-3 left-3"><Play className="h-10 w-10 text-white bg-white/20 backdrop-blur-sm rounded-full p-2" /></div>
                     </div>
-                    <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full capitalize">{course.level}</span>
+                    <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                      {course.language && (
+                        <span className="bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+                          <Globe className="h-3 w-3" />
+                          {course.language}
+                        </span>
+                      )}
+                      <span className="bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full capitalize">{course.level}</span>
+                    </div>
                     {course.discountPrice && (
                       <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">
                         -{Math.round((1 - course.discountPrice / course.price) * 100)}%
@@ -1132,51 +1140,6 @@ const Home = () => {
         </section>
       </AnimatedSection>
 
-      {/* ======== 24. FOOTER ======== */}
-      <footer className="bg-gray-900 text-gray-300 border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-12">
-            <div className="col-span-2 md:col-span-3 lg:col-span-2">
-              <Link to="/" className="flex items-center space-x-2 mb-4">
-                <div className="bg-gradient-to-br from-primary-500 to-accent-600 p-2 rounded-xl">
-                  <BookOpen className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">PrakashEdu</span>
-              </Link>
-              <p className="text-sm text-gray-400 leading-relaxed mb-6 max-w-sm">Empowering learners worldwide with expert-led courses, hands-on projects, and recognized certifications.</p>
-              <div className="flex items-center gap-3">
-                {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                  <Link key={i} to="#" className="h-10 w-10 rounded-xl bg-gray-800 hover:bg-primary-600 flex items-center justify-center transition-all hover:-translate-y-0.5">
-                    <Icon className="h-5 w-5 text-gray-400 hover:text-white" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-            {[
-              { title: 'Courses', links: ['Web Development', 'Data Science', 'Cloud Computing', 'Cybersecurity', 'Mobile Apps', 'UI/UX Design'] },
-              { title: 'Company', links: ['About Us', 'Careers', 'Blog', 'Press Kit', 'Partners', 'Affiliate'] },
-              { title: 'Support', links: ['Help Center', 'Contact Us', 'FAQs', 'Refund Policy', 'Community', 'Status'] },
-            ].map((col, i) => (
-              <div key={i}>
-                <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{col.title}</h3>
-                <ul className="space-y-3">
-                  {col.links.map((link, j) => (
-                    <li key={j}><Link to="#" className="text-sm text-gray-400 hover:text-white transition-colors">{link}</Link></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">&copy; 2026 PrakashEdu. All rights reserved.</p>
-            <div className="flex items-center gap-6 text-sm text-gray-500">
-              <Link to="#" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
-              <Link to="#" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
-              <Link to="#" className="hover:text-gray-300 transition-colors">Cookie Policy</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

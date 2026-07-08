@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, Filter, Star, Users, Clock, ChevronDown, SlidersHorizontal, X, BookOpen, GraduationCap, TrendingUp, Sparkles, LayoutGrid, LayoutList, ArrowUpRight, RotateCcw } from 'lucide-react'
+import { Search, Filter, Star, Users, Clock, ChevronDown, SlidersHorizontal, X, BookOpen, GraduationCap, TrendingUp, Sparkles, LayoutGrid, LayoutList, ArrowUpRight, RotateCcw, Globe } from 'lucide-react'
 import axios from 'axios'
 import { formatPrice } from '../utils/priceFormatter'
 
@@ -364,11 +364,19 @@ const Courses = () => {
                           {Math.round((1 - course.discountPrice / course.price) * 100)}% OFF
                         </div>
                       )}
-                      {course.level && (
-                        <div className={`absolute top-3 right-3 px-3 py-1 rounded-lg text-xs font-semibold capitalize shadow-lg border ${getLevelColor(course.level)}`}>
-                          {course.level}
-                        </div>
-                      )}
+                      <div className="absolute top-3 right-3 flex flex-col gap-2">
+                        {course.language && (
+                          <div className="px-3 py-1 rounded-lg text-xs font-semibold shadow-lg border bg-white/90 backdrop-blur-sm text-gray-700 border-gray-200 flex items-center gap-1">
+                            <Globe className="h-3 w-3" />
+                            {course.language}
+                          </div>
+                        )}
+                        {course.level && (
+                          <div className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize shadow-lg border ${getLevelColor(course.level)}`}>
+                            {course.level}
+                          </div>
+                        )}
+                      </div>
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
                         <span className="bg-white/90 backdrop-blur-sm text-primary-600 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-xl hover:bg-primary-600 hover:text-white transition-all duration-300 flex items-center gap-2">
                           View Details

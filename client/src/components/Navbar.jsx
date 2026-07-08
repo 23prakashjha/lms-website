@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, User, LogOut, BookOpen, Settings, LayoutDashboard, Shield, Info, Phone, Award, FileText, HelpCircle, MessageCircle, Bell, ChevronDown, GraduationCap, Bot, Code2, GitBranch, Sparkles, Search, Sun, Moon, ChevronRight } from 'lucide-react'
+import { Menu, X, User, LogOut, BookOpen, Settings, LayoutDashboard, Shield, Info, Phone, Award, FileText, HelpCircle, MessageCircle, Bell, ChevronDown, GraduationCap, Bot, Code2, GitBranch, Sparkles, Search, Sun, Moon, ChevronRight, ExternalLink } from 'lucide-react'
 import AuthContext from '../context/AuthContext'
 
 const Navbar = () => {
@@ -53,10 +53,9 @@ const Navbar = () => {
             <div className="hidden lg:flex items-center space-x-1">
               {[
                 { to: '/courses', label: 'Courses', icon: BookOpen },
+                { to: '/instructor', label: 'Instructors', icon: GraduationCap },
                 { to: '/coding-practice', label: 'Practice', icon: Code2 },
                 { to: '/projects', label: 'Projects', icon: GitBranch },
-                { to: '/quizzes', label: 'Quizzes', icon: HelpCircle },
-                { to: '/instructor', label: 'Instructors', icon: GraduationCap },
                 { to: '/about', label: 'About', icon: Info },
                 { to: '/contact', label: 'Contact', icon: Phone },
               ].map(({ to, label, icon: Icon }) => (
@@ -69,6 +68,15 @@ const Navbar = () => {
                   {label}
                 </Link>
               ))}
+              <a
+                href="https://mern-job-portal-beryl-one.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50/50 rounded-xl transition-all duration-200"
+              >
+                <ExternalLink className="h-4 w-4 mr-1.5" />
+                HireNext
+              </a>
             </div>
           </div>
 
@@ -255,10 +263,9 @@ const Navbar = () => {
               <div className="space-y-1">
                 {[
                   { to: '/courses', label: 'Courses', icon: BookOpen },
+                  { to: '/instructor', label: 'Instructors', icon: GraduationCap },
                   { to: '/coding-practice', label: 'Practice', icon: Code2 },
                   { to: '/projects', label: 'Projects', icon: GitBranch },
-                  { to: '/quizzes', label: 'Quizzes', icon: HelpCircle },
-                  { to: '/instructor', label: 'Instructors', icon: GraduationCap },
                   { to: '/about', label: 'About', icon: Info },
                   { to: '/contact', label: 'Contact', icon: Phone },
                 ].map(({ to, label, icon: Icon }) => (
@@ -268,6 +275,17 @@ const Navbar = () => {
                     <ChevronRight className="h-4 w-4 ml-auto text-gray-300" />
                   </Link>
                 ))}
+                <a
+                  href="https://mern-job-portal-beryl-one.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center px-3 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition-all text-sm font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <ExternalLink className="h-5 w-5 mr-3" />
+                  HireNext
+                  <ChevronRight className="h-4 w-4 ml-auto text-gray-300" />
+                </a>
               </div>
             </div>
 
