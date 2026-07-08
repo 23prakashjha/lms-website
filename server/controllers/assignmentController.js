@@ -1,4 +1,5 @@
 import Assignment from '../models/Assignment.js'
+import Enrollment from '../models/Enrollment.js'
 
 export const createAssignment = async (req, res) => {
   try {
@@ -28,6 +29,38 @@ export const getAssignment = async (req, res) => {
       .populate('instructor', 'name avatar')
       .populate('submissions.student', 'name avatar')
     res.json({ success: true, assignment })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export const getMyAssignments = async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({ user: req.user.id }).select('course')
+    const courseIds = enrollments.map(e => e.course)
+    console.log('[getMyAssignments] userId:', req.user.id, 'enrollments:', enrollments.length, 'courseIds:', courseIds)
+    const assignments = await Assignment.find({ course: { $in: courseIds } })
+      .populate('course', 'title thumbnail slug')
+      .populate('instructor', 'name')
+    console.log('[getMyAssignments] assignments found:', assignments.length)
+    const result = assignments.map(a => {
+      const submission = a.submissions.find(s => s.student?.toString() === req.user.id)
+      return {
+        _id: a._id,
+        title: a.title,
+        description: a.description,
+        course: a.course,
+        instructor: a.instructor,
+        maxScore: a.maxScore,
+        deadline: a.deadline,
+        instructions: a.instructions,
+        submittedAt: submission?.submittedAt || null,
+        grade: submission?.grade || null,
+        isGraded: submission?.isGraded || false,
+        isSubmitted: !!submission
+      }
+    })
+    res.json({ success: true, assignments: result })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

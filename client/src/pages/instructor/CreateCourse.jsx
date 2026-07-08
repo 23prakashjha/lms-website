@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Plus, Trash2 } from 'lucide-react'
+import { X, Plus, Trash2, Star, Upload, Image as ImageIcon } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
 const CreateCourse = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
+  const thumbnailInputRef = useRef(null)
   const [formData, setFormData] = useState({
     title: '',
     shortDescription: '',
@@ -18,12 +20,34 @@ const CreateCourse = () => {
     discountPrice: '',
     thumbnail: '',
     previewVideo: '',
+    rating: 0,
     requirements: [''],
     whatYouWillLearn: [''],
+    projects: [''],
+    interviewPrep: [''],
+    dsaPractice: [''],
+    curriculum: [''],
     tags: ''
   })
 
   const categories = ['Web Development', 'Data Science', 'Mobile Development', 'Machine Learning', 'Cloud Computing', 'UI/UX Design', 'DevOps', 'Cybersecurity']
+
+  const handleThumbnailUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingThumbnail(true)
+    try {
+      const fd = new FormData()
+      fd.append('thumbnail', file)
+      const { data } = await axios.post('/api/upload/thumbnail', fd)
+      setFormData(prev => ({ ...prev, thumbnail: data.url }))
+      toast.success('Thumbnail uploaded')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to upload thumbnail')
+    } finally {
+      setUploadingThumbnail(false)
+    }
+  }
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -60,6 +84,10 @@ const CreateCourse = () => {
         discountPrice: formData.discountPrice ? parseFloat(formData.discountPrice) : null,
         requirements: formData.requirements.filter(r => r.trim()),
         whatYouWillLearn: formData.whatYouWillLearn.filter(w => w.trim()),
+        projects: formData.projects.filter(p => p.trim()),
+        interviewPrep: formData.interviewPrep.filter(i => i.trim()),
+        dsaPractice: formData.dsaPractice.filter(d => d.trim()),
+        curriculum: formData.curriculum.filter(c => c.trim()),
         tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
         slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
       }
@@ -199,15 +227,39 @@ const CreateCourse = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail URL</label>
-                <input
-                  type="url"
-                  name="thumbnail"
-                  value={formData.thumbnail}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="https://..."
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
+                <div className="flex items-center gap-3 p-3 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                  <div className="w-20 h-14 rounded-lg overflow-hidden bg-gray-200 shrink-0 flex items-center justify-center">
+                    {formData.thumbnail ? (
+                      <img src={formData.thumbnail} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="h-6 w-6 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-700">Course Thumbnail</p>
+                    <p className="text-xs text-gray-400 truncate">{formData.thumbnail ? formData.thumbnail.split('/').pop() : 'Upload a course image'}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                    disabled={uploadingThumbnail}
+                    className="btn-secondary text-sm px-3 py-2 disabled:opacity-50"
+                  >
+                    {uploadingThumbnail ? (
+                      <div className="h-4 w-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      'Upload'
+                    )}
+                  </button>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailUpload}
+                    className="hidden"
+                  />
+                </div>
               </div>
 
               <div>
@@ -289,6 +341,112 @@ const CreateCourse = () => {
                 <Plus className="h-5 w-5 mr-1" />
                 Add Learning Outcome
               </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Projects</h2>
+            <div className="space-y-2">
+              {formData.projects.map((project, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <span className="text-gray-400">•</span>
+                  <input type="text" value={project} onChange={(e) => handleArrayChange('projects', index, e.target.value)} className="input-field flex-1" placeholder="e.g. Build a full-stack e-commerce app" />
+                  {formData.projects.length > 1 && (
+                    <button type="button" onClick={() => removeArrayItem('projects', index)} className="text-red-500 hover:text-red-700">
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={() => addArrayItem('projects')} className="flex items-center text-primary-600 hover:text-primary-700">
+                <Plus className="h-5 w-5 mr-1" />Add Project
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Interview Preparation</h2>
+            <div className="space-y-2">
+              {formData.interviewPrep.map((topic, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <span className="text-gray-400">•</span>
+                  <input type="text" value={topic} onChange={(e) => handleArrayChange('interviewPrep', index, e.target.value)} className="input-field flex-1" placeholder="e.g. Data Structures & Algorithms" />
+                  {formData.interviewPrep.length > 1 && (
+                    <button type="button" onClick={() => removeArrayItem('interviewPrep', index)} className="text-red-500 hover:text-red-700">
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={() => addArrayItem('interviewPrep')} className="flex items-center text-primary-600 hover:text-primary-700">
+                <Plus className="h-5 w-5 mr-1" />Add Topic
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">DSA Practice</h2>
+            <div className="space-y-2">
+              {formData.dsaPractice.map((topic, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <span className="text-gray-400">•</span>
+                  <input type="text" value={topic} onChange={(e) => handleArrayChange('dsaPractice', index, e.target.value)} className="input-field flex-1" placeholder="e.g. Arrays & Hashing" />
+                  {formData.dsaPractice.length > 1 && (
+                    <button type="button" onClick={() => removeArrayItem('dsaPractice', index)} className="text-red-500 hover:text-red-700">
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={() => addArrayItem('dsaPractice')} className="flex items-center text-primary-600 hover:text-primary-700">
+                <Plus className="h-5 w-5 mr-1" />Add Topic
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Curriculum / Course Modules</h2>
+            <div className="space-y-2">
+              {formData.curriculum.map((module, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <span className="text-gray-400">{index + 1}.</span>
+                  <input type="text" value={module} onChange={(e) => handleArrayChange('curriculum', index, e.target.value)} className="input-field flex-1" placeholder="e.g. Introduction to Web Development" />
+                  {formData.curriculum.length > 1 && (
+                    <button type="button" onClick={() => removeArrayItem('curriculum', index)} className="text-red-500 hover:text-red-700">
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={() => addArrayItem('curriculum')} className="flex items-center text-primary-600 hover:text-primary-700">
+                <Plus className="h-5 w-5 mr-1" />Add Module
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Course Rating</h2>
+            <p className="text-sm text-gray-500 mb-4">Set the default rating for this course</p>
+            <div className="flex items-center space-x-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, rating: star === formData.rating ? 0 : star })}
+                  className="p-1 transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`h-8 w-8 ${
+                      star <= formData.rating
+                        ? 'text-yellow-400 fill-current'
+                        : 'text-gray-300'
+                    }`}
+                  />
+                </button>
+              ))}
+              <span className="ml-3 text-lg font-semibold text-gray-900">
+                {formData.rating > 0 ? `${formData.rating}.0` : 'No rating'}
+              </span>
             </div>
           </div>
 

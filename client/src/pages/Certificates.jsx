@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { Award, Download, Share2, ExternalLink } from 'lucide-react'
+import { Award, Download, Share2, ExternalLink, Building2, BarChart } from 'lucide-react'
 
 const Certificates = () => {
   const navigate = useNavigate()
@@ -53,7 +53,7 @@ const Certificates = () => {
               <div key={cert._id} onClick={() => navigate(`/certificate/${cert._id}`)} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                 <div className="bg-gradient-to-r from-primary-600 to-primary-800 p-6 text-white text-center">
                   <Award className="h-12 w-12 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold">Certificate</h3>
+                  <h3 className="text-lg font-bold">{cert.certificateTitle || 'Certificate'}</h3>
                   <p className="text-primary-100 text-sm mt-1">of Completion</p>
                 </div>
                 <div className="p-5">
@@ -61,8 +61,22 @@ const Certificates = () => {
                   <p className="font-semibold text-gray-900 mt-1">{cert.studentName}</p>
                   <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mt-3">Course</p>
                   <p className="font-semibold text-gray-900 mt-1">{cert.courseName || cert.course?.title}</p>
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mt-3">Issued</p>
-                  <p className="text-sm text-gray-600 mt-1">{new Date(cert.issueDate).toLocaleDateString()}</p>
+                  <div className="flex items-center justify-between mt-3">
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Issued</p>
+                      <p className="text-sm text-gray-600 mt-1">{new Date(cert.issueDate).toLocaleDateString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Platform</p>
+                      <p className="text-sm text-gray-600 mt-1 flex items-center"><Building2 className="h-3 w-3 mr-1" />PrakashEdu</p>
+                    </div>
+                  </div>
+                  {cert.percentage > 0 && (
+                    <div className="mt-3 flex items-center text-sm text-green-600">
+                      <BarChart className="h-4 w-4 mr-1" />
+                      <span>{cert.percentage}% Score</span>
+                    </div>
+                  )}
                   {cert.certificateId && (
                     <p className="text-xs text-gray-400 font-mono mt-2 truncate">ID: {cert.certificateId}</p>
                   )}

@@ -49,6 +49,7 @@ export const createOrder = async (req, res) => {
 
     res.json({
       success: true,
+      key: process.env.RAZORPAY_KEY_ID,
       order: {
         id: order.id,
         amount: order.amount,
@@ -69,6 +70,23 @@ export const verifyPayment = async (req, res) => {
     const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id })
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found' })
+    }
+
+    const Razorpay = (await import('razorpay')).default
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET
+    })
+
+    const isValid = razorpay.validatePaymentVerification(
+      { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
+      razorpay_signature
+    )
+
+    if (!isValid) {
+      payment.status = 'failed'
+      await payment.save()
+      return res.status(400).json({ message: 'Payment verification failed' })
     }
 
     payment.razorpayPaymentId = razorpay_payment_id

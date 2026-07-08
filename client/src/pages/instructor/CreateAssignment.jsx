@@ -111,6 +111,7 @@ const CreateAssignment = () => {
       const assignmentData = {
         ...assignment,
         course: selectedCourseId,
+        lesson: assignment.lesson || null,
         maxScore: parseInt(assignment.maxScore) || 100,
         maxFileSize: parseInt(assignment.maxFileSize) || 10485760
       }

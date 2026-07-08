@@ -24,7 +24,11 @@ const courseSchema = new mongoose.Schema({
   lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' }],
   tags: [{ type: String }],
   previewVideo: { type: String },
-  certificateTemplate: { type: String }
+  certificateTemplate: { type: String },
+  projects: [{ type: String }],
+  interviewPrep: [{ type: String }],
+  dsaPractice: [{ type: String }],
+  curriculum: [{ type: String }]
 }, { timestamps: true });
 
 courseSchema.index({ title: 'text', description: 'text' });

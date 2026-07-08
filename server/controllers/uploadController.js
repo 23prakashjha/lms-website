@@ -8,12 +8,16 @@ const __dirname = path.dirname(__filename)
 
 const chatDir = path.join(__dirname, '../uploads/chat')
 const avatarDir = path.join(__dirname, '../uploads/avatars')
+const thumbnailDir = path.join(__dirname, '../uploads/thumbnails')
 
 if (!fs.existsSync(chatDir)) {
   fs.mkdirSync(chatDir, { recursive: true })
 }
 if (!fs.existsSync(avatarDir)) {
   fs.mkdirSync(avatarDir, { recursive: true })
+}
+if (!fs.existsSync(thumbnailDir)) {
+  fs.mkdirSync(thumbnailDir, { recursive: true })
 }
 
 const chatStorage = multer.diskStorage({
@@ -80,8 +84,25 @@ const chatUpload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 })
 
+const thumbnailStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, thumbnailDir)
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    const ext = path.extname(file.originalname)
+    cb(null, `thumbnail-${uniqueSuffix}${ext}`)
+  }
+})
+
 const avatarUpload = multer({
   storage: avatarStorage,
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }
+})
+
+const thumbnailUpload = multer({
+  storage: thumbnailStorage,
   fileFilter: imageFilter,
   limits: { fileSize: 5 * 1024 * 1024 }
 })
@@ -134,8 +155,34 @@ export const uploadAvatar = (req, res) => {
   }
 }
 
+export const uploadThumbnail = (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' })
+    }
+
+    const protocol = req.protocol
+    const host = req.get('host')
+    const baseUrl = `${protocol}://${host}`
+    const fileUrl = `${baseUrl}/uploads/thumbnails/${req.file.filename}`
+
+    res.json({
+      success: true,
+      url: fileUrl,
+      filename: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype
+    })
+  } catch (error) {
+    console.error('Thumbnail upload error:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
 export const uploadMiddleware = chatUpload.single('file')
 
 export const uploadMultipleMiddleware = chatUpload.array('files', 5)
 
 export const uploadAvatarMiddleware = avatarUpload.single('avatar')
+
+export const uploadThumbnailMiddleware = thumbnailUpload.single('thumbnail')

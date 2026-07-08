@@ -52,6 +52,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
+import aiChatRoutes from './routes/aiChatRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -65,6 +66,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/ai-chat', aiChatRoutes);
 
 const onlineUsers = new Map();
 const userSockets = new Map();

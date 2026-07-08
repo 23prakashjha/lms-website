@@ -6,6 +6,18 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { formatPrice } from '../../utils/priceFormatter'
 import toast from 'react-hot-toast'
 
+const defaultCertForm = {
+  userId: '', studentName: '', courseName: '', instructorName: '',
+  certificateTitle: 'Certificate of Completion',
+  studentId: '', studentPhoto: '',
+  courseLevel: '', courseDuration: '', totalHours: 0, technologies: '',
+  grade: '', percentage: 0, quizScore: 0, projectScore: 0,
+  instructorSignature: '',
+  directorName: '', directorSignature: '', officialStamp: '',
+  description: '', qrCode: '', verificationUrl: '', skills: '',
+  accreditationIso: false, accreditationPartner: ''
+}
+
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -32,7 +44,9 @@ const AdminDashboard = () => {
   const [editingCourse, setEditingCourse] = useState(null)
   const [courseForm, setCourseForm] = useState({ title: '', description: '', price: '', category: '', level: '' })
   const [certificates, setCertificates] = useState([])
-  const [certForm, setCertForm] = useState({ studentName: '', courseName: '', instructorName: '' })
+  const [certForm, setCertForm] = useState({ ...defaultCertForm })
+  const [showCertModal, setShowCertModal] = useState(false)
+  const [editingCert, setEditingCert] = useState(null)
 
   useEffect(() => {
     fetchData()
@@ -120,16 +134,137 @@ const AdminDashboard = () => {
       return
     }
     try {
+      const technologies = certForm.technologies ? certForm.technologies.split(',').map(t => t.trim()).filter(Boolean) : []
+      const skills = certForm.skills ? certForm.skills.split(',').map(s => s.trim()).filter(Boolean) : []
+
       await axios.post('/api/certificates', {
+        userId: certForm.userId || undefined,
         studentName: certForm.studentName,
         courseName: certForm.courseName,
-        instructorName: certForm.instructorName || 'Instructor'
+        instructorName: certForm.instructorName || 'Instructor',
+        certificateTitle: certForm.certificateTitle,
+        studentId: certForm.studentId,
+        studentPhoto: certForm.studentPhoto,
+        courseLevel: certForm.courseLevel,
+        courseDuration: certForm.courseDuration,
+        totalHours: Number(certForm.totalHours) || 0,
+        technologies,
+        grade: certForm.grade,
+        percentage: Number(certForm.percentage) || 0,
+        quizScore: Number(certForm.quizScore) || 0,
+        projectScore: Number(certForm.projectScore) || 0,
+        instructorSignature: certForm.instructorSignature,
+        directorName: certForm.directorName,
+        directorSignature: certForm.directorSignature,
+        officialStamp: certForm.officialStamp,
+        description: certForm.description,
+        qrCode: certForm.qrCode,
+        verificationUrl: certForm.verificationUrl,
+        skills,
+        accreditation: {
+          isoCertified: certForm.accreditationIso,
+          industryPartner: certForm.accreditationPartner
+        }
       })
       toast.success('Certificate created successfully')
-      setCertForm({ studentName: '', courseName: '', instructorName: '' })
+      setCertForm({ ...defaultCertForm })
+      setShowCertModal(false)
       fetchData()
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create certificate')
+    }
+  }
+
+  const handleEditCert = (cert) => {
+    setEditingCert(cert)
+    setCertForm({
+      userId: cert.user?._id || cert.user || '',
+      studentName: cert.studentName || '',
+      courseName: cert.courseName || '',
+      instructorName: cert.instructorName || '',
+      certificateTitle: cert.certificateTitle || 'Certificate of Completion',
+      studentId: cert.studentId || '',
+      studentPhoto: cert.studentPhoto || '',
+      courseLevel: cert.courseLevel || '',
+      courseDuration: cert.courseDuration || '',
+      totalHours: cert.totalHours || 0,
+      technologies: (cert.technologies || []).join(', '),
+      grade: cert.grade || '',
+      percentage: cert.percentage || 0,
+      quizScore: cert.quizScore || 0,
+      projectScore: cert.projectScore || 0,
+      instructorSignature: cert.instructorSignature || '',
+      directorName: cert.directorName || '',
+      directorSignature: cert.directorSignature || '',
+      officialStamp: cert.officialStamp || '',
+      description: cert.description || '',
+      qrCode: cert.qrCode || '',
+      verificationUrl: cert.verificationUrl || '',
+      skills: (cert.skills || []).join(', '),
+      accreditationIso: cert.accreditation?.isoCertified || false,
+      accreditationPartner: cert.accreditation?.industryPartner || ''
+    })
+    setShowCertModal(true)
+  }
+
+  const handleUpdateCert = async (e) => {
+    e.preventDefault()
+    if (!editingCert) return
+    if (!certForm.studentName || !certForm.courseName) {
+      toast.error('Student name and course name are required')
+      return
+    }
+    try {
+      const technologies = certForm.technologies ? certForm.technologies.split(',').map(t => t.trim()).filter(Boolean) : []
+      const skills = certForm.skills ? certForm.skills.split(',').map(s => s.trim()).filter(Boolean) : []
+
+      await axios.put(`/api/certificates/${editingCert._id}`, {
+        userId: certForm.userId || undefined,
+        studentName: certForm.studentName,
+        courseName: certForm.courseName,
+        instructorName: certForm.instructorName || 'Instructor',
+        certificateTitle: certForm.certificateTitle,
+        studentId: certForm.studentId,
+        studentPhoto: certForm.studentPhoto,
+        courseLevel: certForm.courseLevel,
+        courseDuration: certForm.courseDuration,
+        totalHours: Number(certForm.totalHours) || 0,
+        technologies,
+        grade: certForm.grade,
+        percentage: Number(certForm.percentage) || 0,
+        quizScore: Number(certForm.quizScore) || 0,
+        projectScore: Number(certForm.projectScore) || 0,
+        instructorSignature: certForm.instructorSignature,
+        directorName: certForm.directorName,
+        directorSignature: certForm.directorSignature,
+        officialStamp: certForm.officialStamp,
+        description: certForm.description,
+        qrCode: certForm.qrCode,
+        verificationUrl: certForm.verificationUrl,
+        skills,
+        accreditation: {
+          isoCertified: certForm.accreditationIso,
+          industryPartner: certForm.accreditationPartner
+        }
+      })
+      toast.success('Certificate updated successfully')
+      setShowCertModal(false)
+      setEditingCert(null)
+      setCertForm({ ...defaultCertForm })
+      fetchData()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update certificate')
+    }
+  }
+
+  const handleDeleteCert = async (certId, studentName) => {
+    if (!window.confirm(`Delete certificate for "${studentName}"? This cannot be undone.`)) return
+    try {
+      await axios.delete(`/api/certificates/${certId}`)
+      toast.success('Certificate deleted')
+      fetchData()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete certificate')
     }
   }
 
@@ -476,23 +611,10 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center"><Award className="h-5 w-5 mr-2 text-yellow-600" />Certificates</h2>
+            <button onClick={() => setShowCertModal(true)} className="btn-primary text-sm py-2">
+              <Plus className="h-4 w-4 mr-1 inline" />Create Certificate
+            </button>
           </div>
-
-          <form onSubmit={handleCreateCertificate} className="flex flex-wrap gap-3 items-end mb-6 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Student Name</label>
-              <input type="text" value={certForm.studentName} onChange={(e) => setCertForm({ ...certForm, studentName: e.target.value })} placeholder="e.g. John Doe" className="input-field text-sm py-2" required />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Course Name</label>
-              <input type="text" value={certForm.courseName} onChange={(e) => setCertForm({ ...certForm, courseName: e.target.value })} placeholder="e.g. Web Development" className="input-field text-sm py-2" required />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Instructor</label>
-              <input type="text" value={certForm.instructorName} onChange={(e) => setCertForm({ ...certForm, instructorName: e.target.value })} placeholder="Optional" className="input-field text-sm py-2" />
-            </div>
-            <button type="submit" className="btn-primary text-sm py-2"><Plus className="h-4 w-4 mr-1 inline" />Create Certificate</button>
-          </form>
 
           {certificates.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No certificates issued yet</p>
@@ -505,6 +627,8 @@ const AdminDashboard = () => {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Course</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Issue Date</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Certificate ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Platform</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -519,6 +643,14 @@ const AdminDashboard = () => {
                       <td className="py-3 px-4 text-sm text-gray-600">{cert.courseName}</td>
                       <td className="py-3 px-4 text-sm text-gray-500">{new Date(cert.issueDate).toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-xs text-gray-400 font-mono">{cert.certificateId}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">PrakashEdu</td>
+                      <td className="py-3 px-4">
+                        <div className="flex space-x-2">
+                          <button onClick={() => handleEditCert(cert)} className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"><Edit className="h-4 w-4" /></button>
+                          <button onClick={() => handleDeleteCert(cert._id, cert.studentName)} className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+                          <Link to={`/certificate/${cert._id}`} className="text-gray-600 hover:text-gray-800 p-1 rounded hover:bg-gray-50"><ExternalLink className="h-4 w-4" /></Link>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -527,6 +659,181 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
+
+      {showCertModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl my-8">
+            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white rounded-t-2xl z-10">
+              <h3 className="text-lg font-semibold text-gray-900">{editingCert ? 'Edit Certificate' : 'Create New Certificate'}</h3>
+              <button onClick={() => { setShowCertModal(false); setEditingCert(null); setCertForm({ ...defaultCertForm }) }} className="text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button>
+            </div>
+            <form onSubmit={editingCert ? handleUpdateCert : handleCreateCertificate} className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Certificate Title</label>
+                <select value={certForm.certificateTitle} onChange={(e) => setCertForm({ ...certForm, certificateTitle: e.target.value })} className="input-field">
+                  <option value="Certificate of Completion">Certificate of Completion</option>
+                  <option value="Certificate of Achievement">Certificate of Achievement</option>
+                  <option value="Certificate of Excellence">Certificate of Excellence</option>
+                </select>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium text-gray-900 mb-3">Student Details</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Student (for certificate ownership)</label>
+                    <select value={certForm.userId} onChange={(e) => {
+                      const selected = users.find(u => u._id === e.target.value)
+                      setCertForm({ ...certForm, userId: e.target.value, studentName: selected ? selected.name : certForm.studentName })
+                    }} className="input-field">
+                      <option value="">-- No user link --</option>
+                      {users.filter(u => u.role === 'student' || u.role === 'instructor').map(u => (
+                        <option key={u._id} value={u._id}>{u.name} ({u.email})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                    <input type="text" value={certForm.studentName} onChange={(e) => setCertForm({ ...certForm, studentName: e.target.value })} placeholder="e.g. John Doe" className="input-field" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
+                    <input type="text" value={certForm.studentId} onChange={(e) => setCertForm({ ...certForm, studentId: e.target.value })} placeholder="e.g. STU-001" className="input-field" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Student Photo URL</label>
+                    <input type="text" value={certForm.studentPhoto} onChange={(e) => setCertForm({ ...certForm, studentPhoto: e.target.value })} placeholder="https://..." className="input-field" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium text-gray-900 mb-3">Course Details</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Course Name *</label>
+                    <input type="text" value={certForm.courseName} onChange={(e) => setCertForm({ ...certForm, courseName: e.target.value })} placeholder="e.g. Complete MERN Stack" className="input-field" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Course Level</label>
+                    <select value={certForm.courseLevel} onChange={(e) => setCertForm({ ...certForm, courseLevel: e.target.value })} className="input-field">
+                      <option value="">Select level</option>
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Course Duration</label>
+                    <input type="text" value={certForm.courseDuration} onChange={(e) => setCertForm({ ...certForm, courseDuration: e.target.value })} placeholder="e.g. 12 weeks" className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Hours</label>
+                    <input type="number" value={certForm.totalHours} onChange={(e) => setCertForm({ ...certForm, totalHours: e.target.value })} placeholder="e.g. 120" className="input-field" min="0" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Technologies (comma separated)</label>
+                    <input type="text" value={certForm.technologies} onChange={(e) => setCertForm({ ...certForm, technologies: e.target.value })} placeholder="e.g. HTML5, CSS3, JavaScript, React" className="input-field" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium text-gray-900 mb-3">Performance (Optional)</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                    <input type="text" value={certForm.grade} onChange={(e) => setCertForm({ ...certForm, grade: e.target.value })} placeholder="e.g. A+" className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Percentage</label>
+                    <input type="number" value={certForm.percentage} onChange={(e) => setCertForm({ ...certForm, percentage: e.target.value })} placeholder="e.g. 95" className="input-field" min="0" max="100" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quiz Score</label>
+                    <input type="number" value={certForm.quizScore} onChange={(e) => setCertForm({ ...certForm, quizScore: e.target.value })} placeholder="e.g. 90" className="input-field" min="0" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Project Score</label>
+                    <input type="number" value={certForm.projectScore} onChange={(e) => setCertForm({ ...certForm, projectScore: e.target.value })} placeholder="e.g. 98" className="input-field" min="0" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium text-gray-900 mb-3">Instructor & Organization</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Instructor Name</label>
+                    <input type="text" value={certForm.instructorName} onChange={(e) => setCertForm({ ...certForm, instructorName: e.target.value })} placeholder="e.g. Jane Smith" className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Instructor Signature URL</label>
+                    <input type="text" value={certForm.instructorSignature} onChange={(e) => setCertForm({ ...certForm, instructorSignature: e.target.value })} placeholder="https://..." className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Director/CEO Name</label>
+                    <input type="text" value={certForm.directorName} onChange={(e) => setCertForm({ ...certForm, directorName: e.target.value })} placeholder="e.g. John Director" className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Director Signature URL</label>
+                    <input type="text" value={certForm.directorSignature} onChange={(e) => setCertForm({ ...certForm, directorSignature: e.target.value })} placeholder="https://..." className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Official Stamp URL</label>
+                    <input type="text" value={certForm.officialStamp} onChange={(e) => setCertForm({ ...certForm, officialStamp: e.target.value })} placeholder="https://..." className="input-field" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium text-gray-900 mb-3">Certificate Content</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea value={certForm.description} onChange={(e) => setCertForm({ ...certForm, description: e.target.value })} placeholder="e.g. This certificate is proudly presented to..." className="input-field" rows="3" />
+                </div>
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Skills (comma separated)</label>
+                  <input type="text" value={certForm.skills} onChange={(e) => setCertForm({ ...certForm, skills: e.target.value })} placeholder="e.g. HTML5, CSS3, JavaScript, React" className="input-field" />
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium text-gray-900 mb-3">Verification</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">QR Code URL</label>
+                    <input type="text" value={certForm.qrCode} onChange={(e) => setCertForm({ ...certForm, qrCode: e.target.value })} placeholder="https://..." className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Verification URL</label>
+                    <input type="text" value={certForm.verificationUrl} onChange={(e) => setCertForm({ ...certForm, verificationUrl: e.target.value })} placeholder="https://yourdomain.com/verify/..." className="input-field" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium text-gray-900 mb-3">Accreditation</h4>
+                <div className="space-y-3">
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" checked={certForm.accreditationIso} onChange={(e) => setCertForm({ ...certForm, accreditationIso: e.target.checked })} className="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                    <span className="text-sm text-gray-700">ISO Certified</span>
+                  </label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Industry Partner</label>
+                    <input type="text" value={certForm.accreditationPartner} onChange={(e) => setCertForm({ ...certForm, accreditationPartner: e.target.value })} placeholder="e.g. Google, Microsoft" className="input-field" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4 border-t">
+                <button type="button" onClick={() => { setShowCertModal(false); setEditingCert(null); setCertForm({ ...defaultCertForm }) }} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+                <button type="submit" className="flex-1 btn-primary">{editingCert ? 'Update Certificate' : 'Create Certificate'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showCourseModal && editingCourse && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

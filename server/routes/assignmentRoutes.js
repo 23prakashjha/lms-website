@@ -3,6 +3,7 @@ import {
   createAssignment,
   getCourseAssignments,
   getAssignment,
+  getMyAssignments,
   submitAssignment,
   gradeSubmission,
   deleteAssignment
@@ -12,6 +13,7 @@ import { protect, instructorOnly } from '../middleware/auth.js'
 const router = express.Router()
 
 router.post('/', protect, instructorOnly, createAssignment)
+router.get('/my-assignments', protect, getMyAssignments)
 router.get('/course/:courseId', getCourseAssignments)
 router.get('/:id', getAssignment)
 router.post('/:id/submit', protect, submitAssignment)

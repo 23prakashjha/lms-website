@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { BookOpen, Users, DollarSign, TrendingUp, Plus, HelpCircle, Edit, Trash2, Eye, FileText, Settings, ChevronDown, ChevronUp, BookMarked, ArrowRight, FileCheck, ClipboardList, ChevronRight, X, Briefcase, GraduationCap, Globe, Award, Calendar, Upload, Building2 } from 'lucide-react'
 import axios from 'axios'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import AuthContext from '../../context/AuthContext'
 
 const InstructorDashboard = () => {
+  const navigate = useNavigate()
   const { user, updateUser } = useContext(AuthContext)
   const [stats, setStats] = useState({
     totalCourses: 0,
@@ -178,6 +179,18 @@ const InstructorDashboard = () => {
       fetchDashboardData()
     } catch (error) {
       toast.error('Failed to delete assignment')
+    }
+  }
+
+  const deleteCourse = async (courseId) => {
+    if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) return
+    
+    try {
+      await axios.delete(`/api/courses/${courseId}`)
+      toast.success('Course deleted successfully')
+      setCourses(prev => prev.filter(c => c._id !== courseId))
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete course')
     }
   }
 
@@ -531,6 +544,22 @@ const InstructorDashboard = () => {
                           <span className="text-yellow-600">Draft</span>
                         )}
                       </div>
+                    </div>
+                    <div className="flex items-center space-x-2 mr-3">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/instructor/edit-course/${course._id}`) }}
+                        className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        title="Edit Course"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteCourse(course._id) }}
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Course"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                     {expandedCourse === course._id ? (
                       <ChevronUp className="h-5 w-5 text-gray-400" />

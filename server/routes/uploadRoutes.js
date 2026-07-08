@@ -1,5 +1,5 @@
 import express from 'express'
-import { uploadChatFile, uploadAvatar, uploadMiddleware, uploadAvatarMiddleware } from '../controllers/uploadController.js'
+import { uploadChatFile, uploadAvatar, uploadThumbnail, uploadMiddleware, uploadAvatarMiddleware, uploadThumbnailMiddleware } from '../controllers/uploadController.js'
 import { protect } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -33,5 +33,20 @@ router.post('/avatar', protect, (req, res, next) => {
     next()
   })
 }, uploadAvatar)
+
+router.post('/thumbnail', protect, (req, res, next) => {
+  uploadThumbnailMiddleware(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ success: false, message: 'File too large. Maximum size is 5MB' })
+      }
+      if (err.message && err.message.includes('File type')) {
+        return res.status(400).json({ success: false, message: err.message })
+      }
+      return res.status(400).json({ success: false, message: err.message || 'Thumbnail upload failed' })
+    }
+    next()
+  })
+}, uploadThumbnail)
 
 export default router

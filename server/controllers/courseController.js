@@ -70,7 +70,10 @@ export const getCourses = async (req, res) => {
 
 export const getCourse = async (req, res) => {
   try {
-    const course = await Course.findOne({ slug: req.params.slug })
+    const param = req.params.slug
+    const query = /^[0-9a-fA-F]{24}$/.test(param) ? { _id: param } : { slug: param }
+
+    const course = await Course.findOne(query)
       .populate('instructor', 'name avatar email bio')
     
     if (!course) {
@@ -174,6 +177,61 @@ export const addReview = async (req, res) => {
     await course.save()
 
     res.status(201).json({ success: true, review })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export const getMyReview = async (req, res) => {
+  try {
+    const review = await Review.findOne({ user: req.user.id, course: req.params.id })
+    res.json({ success: true, review })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export const updateReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body
+    const review = await Review.findOneAndUpdate(
+      { _id: req.params.reviewId, user: req.user.id },
+      { rating, comment },
+      { new: true }
+    )
+    if (!review) return res.status(404).json({ message: 'Review not found' })
+
+    const reviews = await Review.find({ course: review.course, isApproved: true })
+    const avgRating = reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+    await Course.findByIdAndUpdate(review.course, { averageRating: avgRating, totalRatings: reviews.length })
+
+    res.json({ success: true, review })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export const getMyReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ user: req.user.id })
+      .populate('course', 'title slug thumbnail')
+      .sort({ createdAt: -1 })
+    res.json({ success: true, reviews })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export const deleteReview = async (req, res) => {
+  try {
+    const review = await Review.findOneAndDelete({ _id: req.params.reviewId, user: req.user.id })
+    if (!review) return res.status(404).json({ message: 'Review not found' })
+
+    const reviews = await Review.find({ course: review.course, isApproved: true })
+    const avgRating = reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 0
+    await Course.findByIdAndUpdate(review.course, { averageRating: avgRating, totalRatings: reviews.length })
+
+    res.json({ success: true, message: 'Review deleted' })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

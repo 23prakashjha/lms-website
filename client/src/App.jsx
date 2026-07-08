@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard'
 import Courses from './pages/Courses'
 import CourseDetail from './pages/CourseDetail'
 import CreateCourse from './pages/instructor/CreateCourse'
+import EditCourse from './pages/instructor/EditCourse'
 import InstructorDashboard from './pages/instructor/InstructorDashboard'
 import CreateQuiz from './pages/instructor/CreateQuiz'
 import CreateAssignment from './pages/instructor/CreateAssignment'
@@ -29,6 +30,12 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import Instructor from './pages/Instructor'
 import TakeQuiz from './pages/TakeQuiz'
+import VerifyCertificate from './pages/VerifyCertificate'
+import AIChat from './pages/AIChat'
+import AIChatWidget from './components/AIChatWidget'
+import CodingPractice from './pages/CodingPractice'
+import Projects from './pages/Projects'
+import Checkout from './pages/Checkout'
 
 function App() {
   return (
@@ -42,7 +49,29 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/instructor" element={<Instructor />} />
+            <Route path="/ai-assistant" element={
+              <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+                <AIChat />
+              </ProtectedRoute>
+            } />
+            <Route path="/coding-practice" element={
+              <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+                <CodingPractice />
+              </ProtectedRoute>
+            } />
+            <Route path="/projects" element={
+              <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+                <Projects />
+              </ProtectedRoute>
+            } />
+            <Route path="/checkout/:courseId" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <Checkout />
+              </ProtectedRoute>
+            } />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
+            <Route path="/verify" element={<VerifyCertificate />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:slug" element={<CourseDetail />} />
@@ -93,6 +122,11 @@ function App() {
                 <Profile />
               </ProtectedRoute>
             } />
+            <Route path="/instructor/edit-course/:id" element={
+              <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                <EditCourse />
+              </ProtectedRoute>
+            } />
             <Route path="/instructor/create-course" element={
               <ProtectedRoute allowedRoles={['instructor', 'admin']}>
                 <CreateCourse />
@@ -134,6 +168,7 @@ function App() {
               </ProtectedRoute>
             } />
           </Routes>
+          <AIChatWidget />
           <Footer />
           <Toaster position="top-right" />
         </div>
