@@ -302,6 +302,22 @@ const Chat = () => {
     }
   }
 
+  const deleteChatHandler = async (chatId, e) => {
+    e.stopPropagation()
+    if (!confirm('Delete this conversation? This action cannot be undone.')) return
+    try {
+      await axios.delete(`/api/chats/${chatId}`)
+      setChats(prev => prev.filter(c => c._id !== chatId))
+      if (selectedChat?._id === chatId) {
+        setSelectedChat(null)
+        setMessages([])
+      }
+      toast.success('Conversation deleted')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete conversation')
+    }
+  }
+
   const getOtherParticipant = (chat) => {
     return chat.participants?.find(p => p._id !== user?._id)
   }
@@ -391,7 +407,20 @@ const Chat = () => {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}>
           <div className="flex h-full">
             <div className="w-80 border-r flex flex-col">
-              <div className="p-3 border-b">
+              <div className="p-3 border-b bg-gradient-to-r from-primary-50 to-accent-50">
+                <div className="flex items-center mb-3">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="h-10 w-10 rounded-full object-cover border-2 border-primary-200" />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center border-2 border-primary-200">
+                      <User className="h-5 w-5 text-primary-600" />
+                    </div>
+                  )}
+                  <div className="ml-3 flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-sm truncate">{user?.name || 'User'}</p>
+                    <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                  </div>
+                </div>
                 <div className="relative">
                   <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
@@ -426,42 +455,50 @@ const Chat = () => {
                         const isOwn = lastMsg?.sender === user?._id
                         
                         return (
-                          <button
-                            key={chat._id}
-                            onClick={() => setSelectedChat(chat)}
-                            className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
-                              isSelected ? 'bg-primary-50' : ''
-                            }`}
-                          >
-                            <div className="flex items-center">
-                              <div className="relative">
-                                {other?.avatar ? (
-                                  <img src={other.avatar} alt={other.name} className="h-12 w-12 rounded-full object-cover" />
-                                ) : (
-                                  <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
-                                    <User className="h-6 w-6 text-primary-600" />
-                                  </div>
-                                )}
-                                <Circle className="h-3 w-3 text-green-500 absolute bottom-0 right-0 bg-white rounded-full" />
-                              </div>
-                              <div className="ml-3 flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <p className="font-semibold text-gray-900 truncate">
-                                    {other?.name || 'Unknown User'}
-                                  </p>
-                                  {lastMsg && (
-                                    <span className="text-xs text-gray-400">
-                                      {formatTime(lastMsg.createdAt)}
-                                    </span>
+                          <div key={chat._id} className="group relative">
+                            <button
+                              onClick={() => setSelectedChat(chat)}
+                              className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
+                                isSelected ? 'bg-primary-50' : ''
+                              }`}
+                            >
+                              <div className="flex items-center">
+                                <div className="relative">
+                                  {other?.avatar ? (
+                                    <img src={other.avatar} alt={other.name} className="h-12 w-12 rounded-full object-cover" />
+                                  ) : (
+                                    <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
+                                      <User className="h-6 w-6 text-primary-600" />
+                                    </div>
                                   )}
+                                  <Circle className="h-3 w-3 text-green-500 absolute bottom-0 right-0 bg-white rounded-full" />
                                 </div>
-                                <p className="text-sm text-gray-500 truncate mt-0.5">
-                                  {isOwn && lastMsg ? <span className="text-gray-400">You: </span> : null}
-                                  {lastMsg?.content || 'No messages yet'}
-                                </p>
+                                <div className="ml-3 flex-1 min-w-0">
+                                  <div className="flex items-center justify-between">
+                                    <p className="font-semibold text-gray-900 truncate">
+                                      {other?.name || 'Unknown User'}
+                                    </p>
+                                    {lastMsg && (
+                                      <span className="text-xs text-gray-400">
+                                        {formatTime(lastMsg.createdAt)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-500 truncate mt-0.5">
+                                    {isOwn && lastMsg ? <span className="text-gray-400">You: </span> : null}
+                                    {lastMsg?.content || 'No messages yet'}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          </button>
+                            </button>
+                            <button
+                              onClick={(e) => deleteChatHandler(chat._id, e)}
+                              className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                              title="Delete conversation"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         )
                       })}
                   </div>
