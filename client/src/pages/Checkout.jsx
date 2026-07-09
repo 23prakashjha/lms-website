@@ -14,6 +14,9 @@ const Checkout = () => {
   useEffect(() => {
     if (!courseId || !user) return
     loadRazorpay()
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [courseId, user])
 
   const loadRazorpay = () => {
@@ -65,7 +68,10 @@ const Checkout = () => {
           })
           setStatus('success')
           setMessage('Payment successful! You are now enrolled.')
-          setTimeout(() => navigate('/dashboard'), 3000)
+          setTimeout(() => {
+            document.body.style.overflow = ''
+            navigate('/dashboard')
+          }, 3000)
         } catch {
           setStatus('error')
           setMessage('Payment verification failed. Please contact support.')
@@ -120,7 +126,7 @@ const Checkout = () => {
             <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900">Payment Failed</h2>
             <p className="text-gray-500 mt-2">{message}</p>
-            <button onClick={() => navigate('/courses')} className="btn-primary mt-6">
+            <button onClick={() => { document.body.style.overflow = ''; navigate('/courses') }} className="btn-primary mt-6">
               Browse Courses
             </button>
           </div>
@@ -131,7 +137,7 @@ const Checkout = () => {
             <XCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900">Payment Cancelled</h2>
             <p className="text-gray-500 mt-2">{message}</p>
-            <button onClick={() => navigate(-1)} className="btn-primary mt-6">
+            <button onClick={() => { document.body.style.overflow = ''; navigate(-1) }} className="btn-primary mt-6">
               Go Back
             </button>
           </div>

@@ -1,3 +1,5 @@
+process.noDeprecation = true
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -9,10 +11,12 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import rateLimit from 'express-rate-limit';
 
+dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
+import('./config/passport.js');
 
 const app = express();
 const httpServer = createServer(app);
@@ -53,7 +57,6 @@ import chatRoutes from './routes/chatRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
 import aiChatRoutes from './routes/aiChatRoutes.js';
-
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);

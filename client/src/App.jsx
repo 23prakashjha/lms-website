@@ -36,6 +36,7 @@ import AIChatWidget from './components/AIChatWidget'
 import CodingPractice from './pages/CodingPractice'
 import Projects from './pages/Projects'
 import Checkout from './pages/Checkout'
+import AuthCallback from './pages/AuthCallback'
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function App() {
                 <Projects />
               </ProtectedRoute>
             } />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/checkout/:courseId" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <Checkout />

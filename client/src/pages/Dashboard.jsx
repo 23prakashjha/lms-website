@@ -292,7 +292,9 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <Link
-                          to={`/course/${continueCourse.course?.slug || continueCourse.course?._id}/lesson/${continueCourse.course?.lessons?.[0]}`}
+                          to={continueCourse.course?.lessons?.[0]
+                            ? `/course/${continueCourse.course?.slug || continueCourse.course?._id}/lesson/${continueCourse.course?.lessons[0]}`
+                            : `/course/${continueCourse.course?.slug || continueCourse.course?._id}`}
                           className="inline-flex items-center bg-white text-primary-700 px-5 py-2.5 rounded-xl font-semibold hover:bg-primary-50 transition-all text-sm shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
                         >
                           <Play className="h-4 w-4 mr-1.5 fill-primary-700" /> Resume Course <ArrowRight className="h-4 w-4 ml-1.5" />
@@ -433,7 +435,9 @@ const Dashboard = () => {
                             </span>
                           ) : (
                             <Link
-                              to={`/course/${enrollment.course?.slug || enrollment.course?._id}/lesson/${enrollment.course?.lessons?.[0]}`}
+                              to={enrollment.course?.lessons?.[0]
+                                ? `/course/${enrollment.course?.slug || enrollment.course?._id}/lesson/${enrollment.course?.lessons[0]}`
+                                : `/course/${enrollment.course?.slug || enrollment.course?._id}`}
                               className="bg-gradient-to-br from-primary-500 to-accent-600 text-white p-2.5 sm:p-3 rounded-xl hover:shadow-lg hover:shadow-primary-200/50 transition-all flex group-hover:scale-110 active:scale-95"
                             >
                               <Play className="h-4 w-4 sm:h-5 sm:w-5" />

@@ -5,7 +5,9 @@ import jwt from 'jsonwebtoken';
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, lowercase: true },
-  password: { type: String, required: true, minlength: 6 },
+  password: { type: String, minlength: 6 },
+  provider: { type: String, enum: ['local', 'google', 'github'], default: 'local' },
+  providerId: { type: String, default: '' },
   role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
   avatar: { type: String, default: '' },
   bio: { type: String, default: '' },
@@ -38,7 +40,7 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });

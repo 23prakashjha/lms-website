@@ -11,7 +11,7 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' })
     }
 
-    const user = await User.create({ name, email, password, role: role || 'student' })
+    const user = await User.create({ name, email, password, role: role || 'student', provider: 'local' })
 
     const token = user.getSignedToken()
 
@@ -38,6 +38,10 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email }).select('+password')
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' })
+    }
+
+    if (user.provider !== 'local') {
+      return res.status(401).json({ message: `This account uses ${user.provider} login. Please sign in with ${user.provider}.` })
     }
 
     const isMatch = await user.comparePassword(password)
@@ -101,7 +105,7 @@ export const adminRegister = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' })
     }
 
-    const user = await User.create({ name, email, password, role: role || 'student' })
+    const user = await User.create({ name, email, password, role: role || 'student', provider: 'local' })
 
     res.status(201).json({
       success: true,
@@ -116,6 +120,12 @@ export const adminRegister = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
+}
+
+export const handleOAuthCallback = (req, res) => {
+  const token = req.user.getSignedToken()
+  const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?token=${token}`
+  res.redirect(redirectUrl)
 }
 
 export const resetPassword = async (req, res) => {

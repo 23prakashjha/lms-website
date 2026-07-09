@@ -134,7 +134,7 @@ export const markLessonComplete = async (req, res) => {
     const enrollment = await Enrollment.findOne({
       user: req.user.id,
       course: courseId
-    })
+    }).populate('course')
 
     if (!enrollment) {
       return res.status(404).json({ message: 'Not enrolled in this course' })
@@ -142,8 +142,9 @@ export const markLessonComplete = async (req, res) => {
 
     if (!enrollment.completedLessons.includes(lessonId)) {
       enrollment.completedLessons.push(lessonId)
+      const totalLessons = enrollment.course?.lessons?.length || 1
       enrollment.progress = Math.round(
-        (enrollment.completedLessons.length / enrollment.course.lessons.length) * 100
+        (enrollment.completedLessons.length / totalLessons) * 100
       )
 
       if (enrollment.progress >= 100) {

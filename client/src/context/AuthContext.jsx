@@ -53,8 +53,17 @@ export const AuthProvider = ({ children }) => {
     setUser({ ...user, ...userData })
   }
 
+  const setUserFromToken = (token) => {
+    localStorage.setItem('token', token)
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    return axios.get('/api/users/me').then(({ data }) => {
+      setUser(data.user)
+      return data
+    })
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, checkAuth }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, checkAuth, setUserFromToken }}>
       {children}
     </AuthContext.Provider>
   )
