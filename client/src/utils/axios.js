@@ -1,13 +1,11 @@
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://lms-website-f9ha.onrender.com/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
+const API_URL = import.meta.env.VITE_API_URL || 'https://lms-website-f9ha.onrender.com/api'
 
-api.interceptors.request.use(
+axios.defaults.baseURL = API_URL
+axios.defaults.headers.common['Content-Type'] = 'application/json'
+
+axios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     if (token) {
@@ -20,7 +18,7 @@ api.interceptors.request.use(
   }
 )
 
-api.interceptors.response.use(
+axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
@@ -31,4 +29,4 @@ api.interceptors.response.use(
   }
 )
 
-export default api
+export default axios
