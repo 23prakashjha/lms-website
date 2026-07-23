@@ -51,7 +51,7 @@ const Chat = () => {
   const initSocket = async () => {
     try {
       const { io } = await import('socket.io-client')
-      const socket = io('http://localhost:5001', {
+      const socket = io('https://lms-website-f9ha.onrender.com', {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: 5,

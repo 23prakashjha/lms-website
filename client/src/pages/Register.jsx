@@ -196,11 +196,11 @@ const Register = () => {
                 </div>
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <button onClick={() => window.location.href = 'http://localhost:5001/api/auth/google'} className="flex items-center justify-center px-4 py-2.5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">
+                <button onClick={() => window.location.href = 'https://lms-website-f9ha.onrender.com/api/auth/google'} className="flex items-center justify-center px-4 py-2.5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">
                   <Google className="h-5 w-5 mr-2 text-red-500" />
                   <span className="text-sm font-medium text-gray-700">Google</span>
                 </button>
-                <button onClick={() => window.location.href = 'http://localhost:5001/api/auth/github'} className="flex items-center justify-center px-4 py-2.5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">
+                <button onClick={() => window.location.href = 'https://lms-website-f9ha.onrender.com/api/auth/github'} className="flex items-center justify-center px-4 py-2.5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">
                   <Github className="h-5 w-5 mr-2 text-gray-800" />
                   <span className="text-sm font-medium text-gray-700">GitHub</span>
                 </button>
