@@ -16,7 +16,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import('./config/passport.js');
+import('./config/passport.js').catch(err => console.error('Passport config error:', err.message));
 
 const app = express();
 const httpServer = createServer(app);
@@ -196,6 +196,20 @@ app.get('/', (req, res) => {
 
 app.get('/api/online-users', (req, res) => {
   res.json({ count: onlineUsers.size, users: Array.from(onlineUsers.keys()) });
+});
+
+const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(clientDistPath));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ message: 'API route not found' });
+  }
+  res.sendFile(path.join(clientDistPath, 'index.html'));
+});
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ message: 'Internal server error' });
 });
 
 const PORT = process.env.PORT || 5001;

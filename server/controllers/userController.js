@@ -53,10 +53,11 @@ export const getAllUsers = async (req, res) => {
 
 export const getInstructors = async (req, res) => {
   try {
-    const instructors = await User.find({ role: 'instructor' }).select('-password')
+    const instructors = await User.find({ role: 'instructor' }).select('-password').lean()
     res.json({ success: true, users: instructors })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error('Error fetching instructors:', error)
+    res.status(500).json({ message: 'Failed to fetch instructors' })
   }
 }
 
