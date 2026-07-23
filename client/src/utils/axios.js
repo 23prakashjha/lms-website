@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://lms-website-f9ha.onrender.com/api'
+const API_URL = import.meta.env.VITE_API_URL || 'https://lms-website-f9ha.onrender.com'
 
 axios.defaults.baseURL = API_URL
 axios.defaults.headers.common['Content-Type'] = 'application/json'
